@@ -219,6 +219,53 @@ class HikCamera(object):
 
         self.motion_detection = enable
 
+    def get_picture(self):
+        """Gets a snapshot from the camera"""
+        url = ('%s/ISAPI/streaming/channels/101/picture') % self.root_url
+        using_digest = False
+
+        try:
+
+            _LOGGING.debug('Sending reuest to %s to get a snapshot.' % url)
+            response = self.hik_request.get(url, timeout=CONNECT_TIMEOUT)
+            _LOGGING.debug(response)
+
+            if response.status_code == requests.codes.unauthorized:
+                _LOGGING.debug('Basic authentication failed. Using digest.')
+                self.hik_request.auth = HTTPDigestAuth(self.usr, self.pwd)
+                using_digest = True
+                response = self.hik_request.get(url)
+
+            if response.status_code == requests.codes.not_found:
+                # Try alternate URL for deviceInfo
+                _LOGGING.debug('URL Not Found.')
+                # url = '%s/System/deviceInfo' % self.root_url
+                # response = self.hik_request.get(url)
+                # Seems to be difference between camera and nvr, they can't seem to
+                # agree if they should 404 or 401 first
+                if not using_digest and response.status_code == requests.codes.unauthorized:
+                    _LOGGING.debug('Basic authentication failed. Using digest.')
+                    self.hik_request.auth = HTTPDigestAuth(self.usr, self.pwd)
+                    using_digest = True
+                    response = self.hik_request.get(url)
+
+        except (requests.exceptions.RequestException,
+                requests.exceptions.ConnectionError) as err:
+            _LOGGING.error('Unable to fetch picture, error: %s', err)
+            return None
+
+        if response.status_code == requests.codes.unauthorized:
+            _LOGGING.error('Authentication failed')
+            return None
+
+        if response.status_code != requests.codes.ok:
+            # If we didn't receive 200, abort
+            _LOGGING.debug('Unable to fetch picture.')
+            return None
+
+        return response
+
+
     def add_update_callback(self, callback, sensor):
         """Register as callback for when a matching device sensor changes."""
         self._updateCallbacks.append([callback, sensor])
@@ -352,7 +399,7 @@ class HikCamera(object):
         try:
             tree = ET.fromstring(response.text)
             self.fetch_namespace(tree, CONTEXT_INFO)
- 
+
             for item in tree:
                 tag = item.tag.split('}')[1]
                 device_info[tag] = item.text
