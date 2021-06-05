@@ -1,0 +1,24 @@
+ipCameras:
+  port: 80
+  user: admin
+  password: supersecret
+  cameras:
+    back_door:
+       ip: 192.168.x.x
+    driveway:
+       ip: 192.168.x.x2
+    patio:
+       ip: 192.168.x.x3
+
+smtp:
+  user: user_name@@gmail.com
+  password: anothersecret
+  server: smtp.gmail.com
+  recipients:
+    - email1@gmail.com
+    - email2@gmail.com
+
+nas:
+  ip: 192.168.y.x
+  port: 8080
+  surveillanceStationPath: /cgi-bin/logical_input.cgi?name=
