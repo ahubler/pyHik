@@ -263,6 +263,7 @@ class HikCamera(object):
             _LOGGING.debug('Unable to fetch picture.')
             return None
 
+        _LOGGING.debug('Got a snapshot.')
         return response
 
 
