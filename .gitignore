@@ -71,3 +71,6 @@ share/
 
 # IDE
 .vscode
+
+# Config
+config.yaml
